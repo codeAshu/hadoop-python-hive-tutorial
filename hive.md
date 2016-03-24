@@ -2,55 +2,6 @@
 
 #### Install and set up Hive
 
-ssh to your cloud computer and switch to the hduser. Go to the hduser's home.
-
-```bash
-$ su hduser
-$ cd
-```
-Let's download Hive.
-
-```bash
-$ wget http://mirror.cogentco.com/pub/apache/hive/hive-0.14.0/apache-hive-0.14.0-bin.tar.gz
-```
-This is a zipped file. Extract it.
-
-```bash
-$ tar -xzvf apache-hive-0.14.0-bin.tar.gz 
-```
-Now, in hduser's home directory, you have a directory called `apache-hive-0.14.0-bin`.
-We are going to edit your `.bashrc` file to make an environment varible called HIVE_HOME
-so that Hadoop and Hive know where it lives (like we did with the Hadoop setup).
-
-```bash
-$ emacs ~/.bashrc
-```
-To the end of the `.bashrc` file that we are editing, add the following lines
-
-```bash
-export HIVE_HOME=/home/hduser/apache-hive-0.14.0-bin
-export PATH=$PATH:$HIVE_HOME/bin
-```
-Save and close. Now we need to run the `.bashrc` to make sure HIVE_HOME is defined.
-
-```bash
-$ source ~/.bashrc
-```
-That's it. Now we installed Hive. We have one last setup step left.
-Hive basically behaves like a SQL database that lives on the hdfs.
-To be able to do that, it needs a temporary files folder and a place to store the underlying data (in the hdfs).
-We need to create these directories in the hdfs and give the necessary permissions.
-> Obviously, to be able to make changes to the hdfs, make sure your hadoop cluster is up and running.
-> Do `jps` to check if the namenode, secondary namenode and the datanode are up.
-> If not, you need to start them with the `start-dfs.sh` first, you can check to hadoop tutorial to see how we did that.
-
-```bash
-$ hdfs dfs -mkdir -p /tmp
-$ hdfs dfs -mkdir -p /user/hive/warehouse
-$ hdfs dfs -chmod g+w /tmp
-$ hdfs dfs -chmod g+w /user/hive/warehouse
-```
-Aaand, your Hive is ready to rock your world. You can run it by typing
 
 ```
 $ hive
@@ -74,14 +25,10 @@ $ wget http://seanlahman.com/files/database/lahman-csv_2014-02-14.zip
 ```
 This is a zipped file with a bunch of csv files, each is a sql table.
 These tables are full of baseball statistics from 2013. Let's unzip this.
-First we need to switch back to a user with sudo powers so we can install unzip, 
-then switch back to hduser and unzip it.
-(Of course, switch `irmak` below with your own username)
 
 ```bash
-$ su irmak
+
 $ sudo apt-get install unzip
-$ su hduser
 $ mkdir baseballdata
 $ unzip lahman-csv_2014-02-14.zip -d baseballdata
 ```
@@ -198,17 +145,17 @@ abbeych01,1866,10,14,USA,NE,Falls City,1926,4,27,USA,CA,San Francisco,Charlie,Ab
 #### Upload data to Hive
 
 Indeed it's gone. Alright. Let's upload this to hive. First, we need to upload it to hdfs.
-(of course, change `irmak` to whichever directory you have in hdfs) 
+
 ```bash
-$ hdfs dfs -mkdir -p /user/irmak/baseballdata
-$ hdfs dfs -put baseballdata/Master.csv /user/irmak/baseballdata
+$ hdfs dfs -mkdir -p /user/ashu/baseballdata
+$ hdfs dfs -put baseballdata/Master.csv /user/ashu/baseballdata
 ```
 We created a new directory in hsfs and uploaded the csv to it.
 Let's make sure it's there.
 ```bash
-$ hdfs dfs -ls /user/irmak/baseballdata
+$ hdfs dfs -ls /user/ashu/baseballdata
 Found 1 items
--rw-r--r--   1 hduser supergroup    2422684 2015-03-11 22:12 /user/irmak/baseballdata/Master.csv
+-rw-r--r--   1 hduser supergroup    2422684 2015-03-11 22:12 /user/ashu/baseballdata/Master.csv
 ```
 It is. Awesome. Time to run hive
 ```bash
@@ -260,7 +207,7 @@ Time taken: 1.752 seconds
 ```
 And let's load the data
 ```sql
-hive> LOAD DATA INPATH '/user/irmak/baseballdata/Master.csv' OVERWRITE INTO TABLE Master;
+hive> LOAD DATA INPATH '/user/ashu/baseballdata/Master.csv' OVERWRITE INTO TABLE Master;
 Loading data to table default.master
 Table default.master stats: [numFiles=1, numRows=0, totalSize=2422684, rawDataSize=0]
 OK
@@ -467,7 +414,7 @@ Let's remove the header and upload it to hdfs
 ```bash
 hive> exit;
 $ tail -n +2 baseballdata/Salaries.csv > tmp && mv tmp baseballdata/Salaries.csv
-$ hdfs dfs -put baseballdata/Salaries.csv /user/irmak/baseballdata
+$ hdfs dfs -put baseballdata/Salaries.csv /user/ashu/baseballdata
 ```
 Switch to hive, create the table and load the data.
 ```sql
@@ -487,7 +434,7 @@ hive> CREATE TABLE IF NOT EXISTS Salaries
       STORED AS TEXTFILE;                                                                
 OK
 Time taken: 2.502 seconds
-hive> LOAD DATA INPATH '/user/irmak/baseballdata/Salaries.csv' OVERWRITE INTO TABLE Salaries;
+hive> LOAD DATA INPATH '/user/ashu/baseballdata/Salaries.csv' OVERWRITE INTO TABLE Salaries;
 Loading data to table default.salaries
 Table default.salaries stats: [numFiles=1, numRows=0, totalSize=724918, rawDataSize=0]
 OK
